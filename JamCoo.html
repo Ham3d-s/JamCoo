@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="fa" class="h-full dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>جامکو؟</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        vazir: ['Vazirmatn', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+</head>
+<body class="h-full bg-gray-900 font-vazir" dir="rtl">
+    <div class="min-h-full">
+        <main class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
+            <div class="mx-auto max-w-lg">
+                <!-- Main Card -->
+                <div class="bg-gray-800 shadow sm:rounded-lg overflow-hidden">
+                    <div class="px-4 py-5 sm:p-6">
+                        <h1 class="text-2xl font-bold text-white text-center mb-8">
+                           جامکو: جست و جوی کلاس و طبقه
+                        </h1>
+
+                        <!-- Search Form -->
+                        <div class="space-y-4">
+                            <div class="relative rounded-md shadow-sm max-w-[200px] mx-auto">
+                                <input type="number" id="seatNumber" 
+                                    class="block w-full rounded-md border-0 py-2 text-white text-center text-lg shadow-sm ring-1 ring-inset ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-500 bg-gray-700" 
+                                    placeholder="شماره صندلی">
+                            </div>
+
+                            <div class="grid grid-cols-4 gap-4 max-w-[200px] mx-auto">
+                                <button onclick="findClass()" 
+                                    class="col-span-3 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-md text-sm font-semibold shadow-sm transition-colors">
+                                    جستجو
+                                </button>
+                                <button id="resetBtn" onclick="resetAll()" 
+                                    class="col-span-1 bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-md text-xs font-semibold shadow-sm transition-colors w-[120%] -mr-3 flex items-center justify-center">
+                                    ریست
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Record Toggle with Tooltip -->
+                        <div class="flex items-center justify-center space-x-3 space-x-reverse mt-4">
+                            <span class="text-sm text-gray-300">ثبت جستجو در حافظه</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="recordToggle" class="sr-only peer" onchange="handleRecordToggle()">
+                                <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                            </label>
+                            <div class="relative group">
+                                <i class="fas fa-question-circle text-gray-400 hover:text-gray-300 cursor-help"></i>
+                                <div class="absolute z-50 mb-2 w-64 px-4 py-3 bg-gray-700 text-white text-sm rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 bottom-full left-0 md:left-1/2 md:transform md:-translate-x-1/2">
+                                    <p>با فعال کردن این گزینه، تمام جستجوهای شما در حافظه ذخیره می‌شود و می‌توانید بعداً به آنها دسترسی داشته باشید یا آنها را به صورت یکجا کپی یا دانلود کنید.</p>
+                                    <div class="absolute h-2 w-2 bg-gray-700 transform rotate-45 -bottom-1 left-4 md:left-1/2 md:-translate-x-1/2"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="result" class="mt-6 hidden">
+                            <div class="rounded-md bg-gray-700 p-4">
+                                <div id="screenshotArea" class="hidden">
+                                    <div id="resultContent" class="text-sm text-gray-200 text-right leading-6 mb-3"></div>
+                                    <div class="text-xs text-gray-400 text-left border-t border-gray-600 pt-2">
+                                        JamCoo - by Ham3ds
+                                    </div>
+                                </div>
+                                <div id="displayContent" class="text-sm text-gray-200 text-right leading-6"></div>
+                                <div class="mt-4 grid grid-cols-2 gap-2">
+                                    <button id="copyBtn" onclick="copyToClipboard()" 
+                                        class="inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 transition-colors">
+                                        کپی اطلاعات
+                                    </button>
+                                    <button id="screenshotBtn" onclick="takeScreenshot()" 
+                                        class="inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 transition-colors">
+                                        اسکرین‌شات
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-6">
+                            <button type="button" onclick="toggleAccordion()"
+                                class="flex w-full justify-between rounded-lg bg-gray-700 px-4 py-3 text-right text-sm font-medium text-white hover:bg-gray-600 transition-colors">
+                                <span>راهنمای استفاده</span>
+                                <span class="accordion-icon">↓</span>
+                            </button>
+                            <div class="accordion-content hidden mt-2 px-4 py-3 text-sm text-gray-300 bg-gray-700 rounded-lg prose prose-invert">
+                                <h3 class="text-lg font-semibold mb-2"></h3>
+                                <ul class="list-disc pr-4 space-y-2">
+                                    <li>برای پیدا کردن محل کلاس خود، شماره صندلی را وارد کنید.</li>
+                                    <li>شماره کلاس و طبقه مربوطه نمایش داده خواهد شد.</li>
+                                    <li>با دکمه «کپی اطلاعات» می‌توانید نتیجه را کپی کنید.</li>
+                                    <li>با فعال کردن گزینه «ثبت جستجو در حافظه»، می‌توانید تاریخچه جستجوهای خود را ذخیره کنید.</li>
+                                    <li>در بخش تاریخچه می‌توانید همه جستجوهای خود را یکجا مشاهده، کپی یا دانلود کنید.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- History Section -->
+                        <div id="historySection" class="mt-8 pt-8 border-t border-gray-700 hidden">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-lg font-semibold text-white">تاریخچه جستجو</h2>
+                                <button onclick="clearHistory()" class="text-sm text-red-400 hover:text-red-300">پاک کردن تاریخچه</button>
+                            </div>
+                            <div id="historyList" class="space-y-3">
+                                <!-- History items will be inserted here -->
+                            </div>
+                            <div id="historyActions" class="mt-4 grid grid-cols-2 gap-2" style="display: none;">
+                                <button onclick="copyHistory()" class="inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+                                    کپی تاریخچه
+                                </button>
+                                <button onclick="downloadHistory()" class="inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
+                                    دانلود تاریخچه
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="mt-8 pt-8 border-t border-gray-700">
+                            <div class="text-center space-y-6">
+                                <div class="flex justify-center items-center space-x-6 space-x-reverse">
+                                    <a href="https://github.com/Ham3d-s" target="_blank" class="text-gray-400 hover:text-gray-300">
+                                        <i class="fab fa-github text-xl"></i>
+                                    </a>
+                                    <a href="https://t.me/Ham3ds" target="_blank" class="text-gray-400 hover:text-gray-300">
+                                        <i class="fab fa-telegram text-xl"></i>
+                                    </a>
+                                </div>
+                                <div>
+                                    <div class="text-sm text-gray-400">
+                                        Created by Ham3ds
+                                    </div>
+                                    <div class="relative inline-block group mt-1">
+                                        <span class="text-xs text-gray-500 cursor-help">v140371.1</span>
+                                        <div class="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 px-4 py-3 bg-gray-900 dark:bg-gray-700 text-white text-sm rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                                            <div class="border-b border-gray-700 dark:border-gray-600 pb-2 mb-2">
+                                                <strong>ورژن:</strong> 140371.1
+                                            </div>
+                                            <p class="mb-2">این ورژن برای ترم مهرماه ۱۴۰۳ طراحی شده است.</p>
+                                            <ul class="text-xs space-y-1 text-gray-300">
+                                                <li>• جستجوی سریع کلاس‌ها</li>
+                                                <li>• نمایش طبقه و محدوده شماره صندلی‌ها</li>
+                                                <li>• رابط کاربری ساده و کاربرپسند</li>
+                                                <li>• قابلیت ذخیره و مدیریت تاریخچه جستجوها</li>
+                                                <li>• امکان کپی و دانلود تاریخچه جستجوها</li>
+                                                <li>• بهبود نمایش راهنما و اطلاعات</li>
+                                            </ul>
+                                            <div class="absolute bottom-[-8px] left-1/2 transform -translate-x-1/2 w-3 h-3 bg-gray-900 dark:bg-gray-700 rotate-45"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const data = [
+            { from: 1, to: 70, title: 'سالن اجتماعات', floor: 'همکف' },
+            { from: 71, to: 102, title: 'کلاس 2', floor: 'اول' },
+            { from: 103, to: 123, title: 'کلاس 3', floor: 'اول' },
+            { from: 124, to: 145, title: 'کلاس 4', floor: 'اول' },
+            { from: 146, to: 177, title: 'کلاس 5', floor: 'چهارم' },
+            { from: 178, to: 209, title: 'کلاس 6', floor: 'چهارم' },
+            { from: 210, to: 221, title: 'کلاس 9', floor: 'پنجم' },
+            { from: 222, to: 243, title: 'کلاس 10', floor: 'پنجم' },
+            { from: 244, to: 305, title: 'کلاس 11', floor: 'ششم' },
+            { from: 306, to: 333, title: 'کلاس 12', floor: 'ششم' },
+        ];
+
+        let searchHistory = JSON.parse(localStorage.getItem('searchHistory') || '[]');
+
+        function updateHistoryDisplay() {
+            const historySection = document.getElementById('historySection');
+            const historyList = document.getElementById('historyList');
+            const historyActions = document.getElementById('historyActions');
+            
+            // Only show history section if recording is enabled and there are items
+            const shouldShowHistory = document.getElementById('recordToggle').checked && searchHistory.length > 0;
+            historySection.style.display = shouldShowHistory ? 'block' : 'none';
+            
+            if (shouldShowHistory) {
+                historyList.innerHTML = searchHistory.map((item, index) => `
+                    <div class="bg-gray-700 rounded-lg p-3">
+                        <div class="flex justify-between items-start">
+                            <div class="text-white">
+                                <p>شماره صندلی: ${item.seatNumber}</p>
+                                <p class="text-sm text-gray-300">کلاس: ${item.className} - طبقه: ${item.floor}</p>
+                            </div>
+                            <button onclick="removeFromHistory(${index})" class="text-gray-400 hover:text-red-400">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+
+                historyActions.style.display = 'grid';
+            }
+        }
+
+        function addToHistory(seatNumber, classInfo) {
+            if (document.getElementById('recordToggle').checked) {
+                const historyItem = {
+                    seatNumber,
+                    className: classInfo.title,
+                    floor: classInfo.floor,
+                    timestamp: new Date().toISOString()
+                };
+                searchHistory.push(historyItem);
+                localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
+                updateHistoryDisplay();
+            }
+        }
+
+        function removeFromHistory(index) {
+            searchHistory.splice(index, 1);
+            localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
+            updateHistoryDisplay();
+        }
+
+        function clearHistory() {
+            if (confirm('آیا مطمئن هستید که می‌خواهید تاریخچه را پاک کنید؟')) {
+                searchHistory = [];
+                localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
+                updateHistoryDisplay();
+            }
+        }
+
+        function copyHistory() {
+            const historyText = searchHistory.map(item => 
+                `دانشجوی عزیز، اطلاعات شما به شرح زیر است:
+شماره صندلی شما: ${item.seatNumber}
+طبقه: ${item.floor}
+کلاس: ${item.className}
+شماره‌های موجود در این کلاس: از ${data.find(d => d.title === item.className).from} تا ${data.find(d => d.title === item.className).to}
+`
+            ).join('\n-------------------\n') + '\n\nموفق باشید\n@Ham3ds';
+            
+            navigator.clipboard.writeText(historyText).then(() => {
+                alert('تاریخچه با موفقیت کپی شد!');
+            });
+        }
+
+        function downloadHistory() {
+            const historyText = searchHistory.map(item => 
+                `دانشجوی عزیز، اطلاعات شما به شرح زیر است:
+شماره صندلی شما: ${item.seatNumber}
+طبقه: ${item.floor}
+کلاس: ${item.className}
+شماره‌های موجود در این کلاس: از ${data.find(d => d.title === item.className).from} تا ${data.find(d => d.title === item.className).to}
+`
+            ).join('\n-------------------\n') + '\n\nموفق باشید\n@Ham3ds';
+            
+            const blob = new Blob([historyText], { type: 'text/plain;charset=utf-8' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'jamco-history.txt';
+            link.click();
+        }
+
+        function findClass() {
+            const seatNumber = parseInt(document.getElementById('seatNumber').value, 10);
+            const resultDiv = document.getElementById('result');
+            const displayContent = document.getElementById('displayContent');
+            const resultContent = document.getElementById('resultContent');
+            const copyBtn = document.getElementById('copyBtn');
+
+            if (isNaN(seatNumber)) {
+                const errorMsg = 'لطفاً یک شماره صندلی معتبر وارد کنید.';
+                displayContent.innerHTML = errorMsg;
+                resultContent.innerHTML = errorMsg;
+                resultDiv.style.display = 'block';
+                copyBtn.style.display = 'none';
+                return;
+            }
+
+            const classInfo = data.find(
+                (item) => seatNumber >= item.from && seatNumber <= item.to
+            );
+
+            if (classInfo) {
+                const content = `
+                    <p>شماره صندلی: ${seatNumber}</p>
+                    <p>طبقه: ${classInfo.floor}</p>
+                    <p>کلاس: ${classInfo.title}</p>
+                    <p>شماره‌های موجود در این کلاس: از ${classInfo.from} تا ${classInfo.to}</p>
+                `;
+                displayContent.innerHTML = content;
+                resultContent.innerHTML = content;
+                copyBtn.style.display = 'block';
+                addToHistory(seatNumber, classInfo);
+            } else {
+                const notFoundMsg = 'شماره صندلی یافت نشد.';
+                displayContent.innerHTML = notFoundMsg;
+                resultContent.innerHTML = notFoundMsg;
+                copyBtn.style.display = 'none';
+            }
+
+            resultDiv.style.display = 'block';
+        }
+
+        function resetAll() {
+            document.getElementById('seatNumber').value = '';
+            document.getElementById('result').style.display = 'none';
+            document.getElementById('copyBtn').style.display = 'block';
+            document.getElementById('screenshotBtn').style.display = 'block';
+            const accordionContent = document.querySelector('.accordion-content');
+            accordionContent.style.display = 'none';
+        }
+
+        function copyToClipboard() {
+            const seatNumber = document.getElementById('seatNumber').value;
+            const classInfo = data.find(
+                (item) => seatNumber >= item.from && seatNumber <= item.to
+            );
+
+            if (classInfo) {
+                const markdownText = `دانشجوی عزیز، اطلاعات شما به شرح زیر است:
+شماره صندلی شما: ${seatNumber}
+طبقه: ${classInfo.floor}
+کلاس: ${classInfo.title}
+شماره‌های موجود در این کلاس: از ${classInfo.from} تا ${classInfo.to}
+
+موفق باشید
+@Ham3ds`;
+
+                navigator.clipboard.writeText(markdownText).then(() => {
+                    const copyBtn = document.getElementById('copyBtn');
+                    copyBtn.innerHTML = 'کپی شد!';
+                    setTimeout(() => {
+                        copyBtn.innerHTML = 'کپی اطلاعات';
+                    }, 2000);
+                });
+            }
+        }
+
+        async function takeScreenshot() {
+            const screenshotArea = document.getElementById('screenshotArea');
+            const screenshotBtn = document.getElementById('screenshotBtn');
+            
+            try {
+                // Show screenshot area and style it
+                screenshotArea.style.display = 'block';
+                screenshotArea.style.padding = '20px';
+                screenshotArea.style.background = '#374151';
+                screenshotArea.style.borderRadius = '8px';
+                
+                const canvas = await html2canvas(screenshotArea, {
+                    backgroundColor: '#374151',
+                    scale: 2,
+                    logging: false
+                });
+                
+                // Reset and hide screenshot area
+                screenshotArea.style.display = 'none';
+                screenshotArea.style.padding = '';
+                screenshotArea.style.background = '';
+                screenshotArea.style.borderRadius = '';
+
+                canvas.toBlob(async (blob) => {
+                    try {
+                        await navigator.clipboard.write([
+                            new ClipboardItem({ 'image/png': blob })
+                        ]);
+                        screenshotBtn.innerHTML = 'کپی شد!';
+                        setTimeout(() => {
+                            screenshotBtn.innerHTML = 'اسکرین‌شات';
+                        }, 2000);
+                    } catch (err) {
+                        console.error('Failed to copy screenshot:', err);
+                        alert('خطا در کپی اسکرین‌شات');
+                    }
+                }, 'image/png');
+            } catch (err) {
+                console.error('Failed to take screenshot:', err);
+                alert('خطا در تهیه اسکرین‌شات');
+            }
+        }
+
+        function toggleAccordion() {
+            const content = document.querySelector('.accordion-content');
+            const header = document.querySelector('.accordion-header');
+            if (content.style.display === 'none' || !content.style.display) {
+                content.style.display = 'block';
+                header.innerHTML = 'راهنمای استفاده ↑';
+            } else {
+                content.style.display = 'none';
+                header.innerHTML = 'راهنمای استفاده ↓';
+            }
+        }
+
+        function handleRecordToggle() {
+            const isChecked = document.getElementById('recordToggle').checked;
+            const historySection = document.getElementById('historySection');
+            if (!isChecked) {
+                historySection.style.display = 'none';
+            } else if (searchHistory.length > 0) {
+                historySection.style.display = 'block';
+            }
+        }
+
+        // Initialize history display on page load
+        document.addEventListener('DOMContentLoaded', updateHistoryDisplay);
+    </script>
+</body>
+</html>
