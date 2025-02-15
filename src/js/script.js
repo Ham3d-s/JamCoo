@@ -88,6 +88,18 @@ function updateHistoryDisplay() {
         `).join('');
 
         historyActions.style.display = 'grid';
+        historyActions.className = 'mt-4 grid grid-cols-3 gap-2';
+        historyActions.innerHTML = `
+            <button onclick="copyHistory()" class="inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+                کپی تاریخچه
+            </button>
+            <button onclick="downloadHistory()" class="inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
+                دانلود تاریخچه
+            </button>
+            <button onclick="takeHistoryScreenshot()" class="inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                اسکرین‌شات
+            </button>
+        `;
     }
 }
 
@@ -250,11 +262,19 @@ async function takeScreenshot() {
         screenshotArea.style.background = '';
         screenshotArea.style.borderRadius = '';
 
+        // Copy to clipboard
         canvas.toBlob(async (blob) => {
             try {
                 await navigator.clipboard.write([
                     new ClipboardItem({ 'image/png': blob })
                 ]);
+                
+                // Create download link
+                const link = document.createElement('a');
+                link.download = 'jamcoo-screenshot.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                
                 screenshotBtn.innerHTML = 'کپی شد!';
                 setTimeout(() => {
                     screenshotBtn.innerHTML = 'اسکرین‌شات';
@@ -267,6 +287,55 @@ async function takeScreenshot() {
     } catch (err) {
         console.error('Failed to take screenshot:', err);
         alert('خطا در تهیه اسکرین‌شات');
+    }
+}
+
+async function takeHistoryScreenshot() {
+    const historyList = document.getElementById('historyList');
+    try {
+        // Create a temporary container for the screenshot
+        const tempContainer = document.createElement('div');
+        tempContainer.style.background = '#374151';
+        tempContainer.style.padding = '20px';
+        tempContainer.style.borderRadius = '8px';
+        tempContainer.style.maxWidth = '600px';
+        tempContainer.style.margin = '0 auto';
+        
+        // Add history items
+        const historyContent = searchHistory.map(item => `
+            <div style="background: #4B5563; padding: 12px; margin: 8px 0; border-radius: 8px;">
+                <div style="color: white; margin-bottom: 4px;">شماره صندلی: ${item.seatNumber}</div>
+                <div style="color: #D1D5DB; font-size: 14px;">کلاس: ${item.className} - طبقه: ${item.floor}</div>
+            </div>
+        `).join('');
+        
+        tempContainer.innerHTML = `
+            <h2 style="color: white; font-size: 20px; margin-bottom: 16px; text-align: center;">جام‌کو: جست و جوی کلاس و طبقه</h2>
+            ${historyContent}
+            <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #4B5563; text-align: left; color: #9CA3AF; font-size: 12px;">
+                JamCoo? - by Ham3ds
+            </div>
+        `;
+
+        document.body.appendChild(tempContainer);
+        
+        const canvas = await html2canvas(tempContainer, {
+            backgroundColor: '#374151',
+            scale: 2,
+            logging: false
+        });
+        
+        document.body.removeChild(tempContainer);
+
+        // Create download link
+        const link = document.createElement('a');
+        link.download = 'jamcoo-history.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+
+    } catch (err) {
+        console.error('Failed to take history screenshot:', err);
+        alert('خطا در تهیه اسکرین‌شات تاریخچه');
     }
 }
 
