@@ -341,13 +341,16 @@ async function takeHistoryScreenshot() {
 
 function toggleAccordion() {
     const content = document.querySelector('.accordion-content');
-    const header = document.querySelector('.accordion-header');
+    const icon = document.querySelector('.accordion-icon > i');
+    
     if (content.style.display === 'none' || !content.style.display) {
-        content.style.display = 'block';
-        header.innerHTML = 'راهنمای استفاده ↑';
+      // open state
+      content.style.display = 'block';
+      icon.style.transform = 'rotate(-180deg)';
     } else {
-        content.style.display = 'none';
-        header.innerHTML = 'راهنمای استفاده ↓';
+      // close state
+      content.style.display = 'none';
+      icon.style.transform = '';
     }
 }
 
