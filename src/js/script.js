@@ -1,3 +1,36 @@
+// Constants and Configuration
+const SEAT_RANGE = {
+    MIN: 1,
+    MAX: 333
+};
+
+const NOTIFICATION_DURATION = 2000;
+
+// Utility Functions
+function showNotification(message, type = 'success') {
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg transition-opacity duration-300 ${
+        type === 'error' ? 'bg-red-500' : 'bg-green-500'
+    } text-white`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => notification.remove(), 300);
+    }, NOTIFICATION_DURATION);
+}
+
+function validateSeatNumber(seatNumber) {
+    if (isNaN(seatNumber)) {
+        return { isValid: false, message: 'لطفاً یک عدد معتبر وارد کنید.' };
+    }
+    if (seatNumber < SEAT_RANGE.MIN || seatNumber > SEAT_RANGE.MAX) {
+        return { isValid: false, message: `لطفاً عددی بین ${SEAT_RANGE.MIN} تا ${SEAT_RANGE.MAX} وارد کنید.` };
+    }
+    return { isValid: true };
+}
+
 const data = [
     {
       "from": 1,
@@ -60,146 +93,220 @@ const data = [
       "floor": "ششم"
     }
   ];
-  
-let searchHistory = JSON.parse(localStorage.getItem('searchHistory') || '[]');
 
-function updateHistoryDisplay() {
-    const historySection = document.getElementById('historySection');
-    const historyList = document.getElementById('historyList');
-    const historyActions = document.getElementById('historyActions');
+// History Management
+class HistoryManager {
+    constructor() {
+        this.history = JSON.parse(localStorage.getItem('searchHistory') || '[]');
+    }
 
-    // Only show history section if recording is enabled and there are items
-    const shouldShowHistory = document.getElementById('recordToggle').checked && searchHistory.length > 0;
-    historySection.style.display = shouldShowHistory ? 'block' : 'none';
+    add(item) {
+        if (!document.getElementById('recordToggle').checked) return;
+        
+        // Check if this seat number already exists in history
+        const exists = this.history.some(historyItem => 
+            historyItem.seatNumber === item.seatNumber
+        );
 
-    if (shouldShowHistory) {
-        historyList.innerHTML = searchHistory.map((item, index) => `
-            <div class="bg-gray-700 rounded-lg p-3">
-                <div class="flex justify-between items-start">
-                    <div class="text-white">
-                        <p>شماره صندلی: ${item.seatNumber}</p>
-                        <p class="text-sm text-gray-300">کلاس: ${item.className} - طبقه: ${item.floor}</p>
+        if (!exists) {
+            this.history.push(item);
+            this.save();
+            this.updateDisplay();
+        }
+    }
+
+    remove(index) {
+        this.history.splice(index, 1);
+        this.save();
+        this.updateDisplay();
+    }
+
+    clear() {
+        if (confirm('آیا مطمئن هستید که می‌خواهید تاریخچه را پاک کنید؟')) {
+            this.history = [];
+            this.save();
+            this.updateDisplay();
+            showNotification('تاریخچه با موفقیت پاک شد');
+        }
+    }
+
+    save() {
+        localStorage.setItem('searchHistory', JSON.stringify(this.history));
+    }
+
+    updateDisplay() {
+        const historySection = document.getElementById('historySection');
+        const historyList = document.getElementById('historyList');
+        const shouldShowHistory = document.getElementById('recordToggle').checked && this.history.length > 0;
+
+        historySection.style.display = shouldShowHistory ? 'block' : 'none';
+
+        if (shouldShowHistory) {
+            historyList.innerHTML = this.history.map((item, index) => `
+                <div class="bg-gray-700 rounded-lg p-4 transform transition-transform hover:scale-[1.02] hover:shadow-lg">
+                    <div class="flex justify-between items-start">
+                        <div class="text-white space-y-1">
+                            <p class="font-medium">شماره صندلی: ${item.seatNumber}</p>
+                            <p class="text-sm text-gray-300">کلاس: ${item.className} - طبقه: ${item.floor}</p>
+                            <p class="text-xs text-gray-400">${new Date(item.timestamp).toLocaleDateString('fa-IR')}</p>
+                        </div>
+                        <button onclick="historyManager.remove(${index})" 
+                                class="text-gray-400 hover:text-red-400 transition-colors">
+                            <i class="fas fa-times"></i>
+                        </button>
                     </div>
-                    <button onclick="removeFromHistory(${index})" class="text-gray-400 hover:text-red-400">
-                        <i class="fas fa-times"></i>
-                    </button>
                 </div>
-            </div>
-        `).join('');
+            `).join('');
 
+            this.updateHistoryActions();
+        }
+    }
+
+    updateHistoryActions() {
+        const historyActions = document.getElementById('historyActions');
         historyActions.style.display = 'grid';
         historyActions.className = 'mt-4 grid grid-cols-3 gap-2';
         historyActions.innerHTML = `
-            <button onclick="copyHistory()" class="inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+            <button onclick="historyManager.copy()" 
+                    class="inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 transition-colors">
                 کپی تاریخچه
             </button>
-            <button onclick="downloadHistory()" class="inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
+            <button onclick="historyManager.download()" 
+                    class="inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 transition-colors">
                 دانلود تاریخچه
             </button>
-            <button onclick="takeHistoryScreenshot()" class="inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+            <button onclick="historyManager.takeScreenshot()" 
+                    class="inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors">
                 اسکرین‌شات
             </button>
         `;
     }
-}
 
-function addToHistory(seatNumber, classInfo) {
-    if (document.getElementById('recordToggle').checked) {
-        const historyItem = {
-            seatNumber,
-            className: classInfo.title,
-            floor: classInfo.floor,
-            timestamp: new Date().toISOString()
-        };
-        searchHistory.push(historyItem);
-        localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
-        updateHistoryDisplay();
-    }
-}
-
-function removeFromHistory(index) {
-    searchHistory.splice(index, 1);
-    localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
-    updateHistoryDisplay();
-}
-
-function clearHistory() {
-    if (confirm('آیا مطمئن هستید که می‌خواهید تاریخچه را پاک کنید؟')) {
-        searchHistory = [];
-        localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
-        updateHistoryDisplay();
-    }
-}
-
-function copyHistory() {
-    const historyText = searchHistory.map(item =>
-        `دانشجوی عزیز، اطلاعات شما به شرح زیر است:
+    copy() {
+        const historyText = this.history.map(item =>
+            `دانشجوی عزیز، اطلاعات شما به شرح زیر است:
 شماره صندلی شما: ${item.seatNumber}
 طبقه: ${item.floor}
 کلاس: ${item.className}
 شماره‌های موجود در این کلاس: از ${data.find(d => d.title === item.className).from} تا ${data.find(d => d.title === item.className).to}
 `
-    ).join('\n-------------------\n') + '\n\nموفق باشید\n@Ham3ds';
+        ).join('\n-------------------\n') + '\n\nموفق باشید\n@Ham3ds';
 
-    navigator.clipboard.writeText(historyText).then(() => {
-        alert('تاریخچه با موفقیت کپی شد!');
+        navigator.clipboard.writeText(historyText).then(() => {
+            showNotification('تاریخچه با موفقیت کپی شد!');
+        });
+    }
+
+    download() {
+        const historyText = this.history.map(item =>
+            `دانشجوی عزیز، اطلاعات شما به شرح زیر است:
+شماره صندلی شما: ${item.seatNumber}
+طبقه: ${item.floor}
+کلاس: ${item.className}
+شماره‌های موجود در این کلاس: از ${data.find(d => d.title === item.className).from} تا ${data.find(d => d.title === item.className).to}
+`
+        ).join('\n-------------------\n') + '\n\nموفق باشید\n@Ham3ds';
+
+        const blob = new Blob([historyText], { type: 'text/plain;charset=utf-8' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'jamco-history.txt';
+        link.click();
+    }
+
+    async takeScreenshot() {
+        const historyList = document.getElementById('historyList');
+        try {
+            // Create a temporary container for the screenshot
+            const tempContainer = document.createElement('div');
+            tempContainer.style.background = '#374151';
+            tempContainer.style.padding = '20px';
+            tempContainer.style.borderRadius = '8px';
+            tempContainer.style.maxWidth = '600px';
+            tempContainer.style.margin = '0 auto';
+            
+            // Add history items
+            const historyContent = this.history.map(item => `
+                <div style="background: #4B5563; padding: 12px; margin: 8px 0; border-radius: 8px;">
+                    <div style="color: white; margin-bottom: 4px;">شماره صندلی: ${item.seatNumber}</div>
+                    <div style="color: #D1D5DB; font-size: 14px;">کلاس: ${item.className} - طبقه: ${item.floor}</div>
+                </div>
+            `).join('');
+            
+            tempContainer.innerHTML = `
+                <h2 style="color: white; font-size: 20px; margin-bottom: 16px; text-align: center;">جام‌کو: جست و جوی کلاس و طبقه</h2>
+                ${historyContent}
+                <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #4B5563; text-align: left; color: #9CA3AF; font-size: 12px;">
+                    JamCoo? - by Ham3ds
+                </div>
+            `;
+
+            document.body.appendChild(tempContainer);
+            
+            const canvas = await html2canvas(tempContainer, {
+                backgroundColor: '#374151',
+                scale: 2,
+                logging: false
+            });
+            
+            document.body.removeChild(tempContainer);
+
+            // Create download link
+            const link = document.createElement('a');
+            link.download = 'jamcoo-history.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+
+        } catch (err) {
+            console.error('Failed to take history screenshot:', err);
+            alert('خطا در تهیه اسکرین‌شات تاریخچه');
+        }
+    }
+}
+
+const historyManager = new HistoryManager();
+
+// Search functionality
+function findClass() {
+    const seatNumber = parseInt(document.getElementById('seatNumber').value, 10);
+    const validation = validateSeatNumber(seatNumber);
+
+    if (!validation.isValid) {
+        showNotification(validation.message, 'error');
+        return;
+    }
+
+    const classInfo = data.find(item => seatNumber >= item.from && seatNumber <= item.to);
+
+    if (!classInfo) {
+        showNotification('شماره صندلی مورد نظر یافت نشد.', 'error');
+        return;
+    }
+
+    updateSearchResult(seatNumber, classInfo);
+    historyManager.add({
+        seatNumber,
+        className: classInfo.title,
+        floor: classInfo.floor,
+        timestamp: new Date().toISOString()
     });
 }
 
-function downloadHistory() {
-    const historyText = searchHistory.map(item =>
-        `دانشجوی عزیز، اطلاعات شما به شرح زیر است:
-شماره صندلی شما: ${item.seatNumber}
-طبقه: ${item.floor}
-کلاس: ${item.className}
-شماره‌های موجود در این کلاس: از ${data.find(d => d.title === item.className).from} تا ${data.find(d => d.title === item.className).to}
-`
-    ).join('\n-------------------\n') + '\n\nموفق باشید\n@Ham3ds';
-
-    const blob = new Blob([historyText], { type: 'text/plain;charset=utf-8' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'jamco-history.txt';
-    link.click();
-}
-
-function findClass() {
-    const seatNumber = parseInt(document.getElementById('seatNumber').value, 10);
+function updateSearchResult(seatNumber, classInfo) {
     const resultDiv = document.getElementById('result');
     const displayContent = document.getElementById('displayContent');
     const resultContent = document.getElementById('resultContent');
     const copyBtn = document.getElementById('copyBtn');
 
-    if (isNaN(seatNumber)) {
-        const errorMsg = 'لطفاً یک شماره صندلی معتبر وارد کنید.';
-        displayContent.innerHTML = errorMsg;
-        resultContent.innerHTML = errorMsg;
-        resultDiv.style.display = 'block';
-        copyBtn.style.display = 'none';
-        return;
-    }
-
-    const classInfo = data.find(
-        (item) => seatNumber >= item.from && seatNumber <= item.to
-    );
-
-    if (classInfo) {
-        const content = `
-            <p>شماره صندلی: ${seatNumber}</p>
-            <p>طبقه: ${classInfo.floor}</p>
-            <p>کلاس: ${classInfo.title}</p>
-            <p>شماره‌های موجود در این کلاس: از ${classInfo.from} تا ${classInfo.to}</p>
-        `;
-        displayContent.innerHTML = content;
-        resultContent.innerHTML = content;
-        copyBtn.style.display = 'block';
-        addToHistory(seatNumber, classInfo);
-    } else {
-        const notFoundMsg = 'شماره صندلی یافت نشد.';
-        displayContent.innerHTML = notFoundMsg;
-        resultContent.innerHTML = notFoundMsg;
-        copyBtn.style.display = 'none';
-    }
+    const content = `
+        <p>شماره صندلی: ${seatNumber}</p>
+        <p>طبقه: ${classInfo.floor}</p>
+        <p>کلاس: ${classInfo.title}</p>
+        <p>شماره‌های موجود در این کلاس: از ${classInfo.from} تا ${classInfo.to}</p>
+    `;
+    displayContent.innerHTML = content;
+    resultContent.innerHTML = content;
+    copyBtn.style.display = 'block';
 
     resultDiv.style.display = 'block';
 }
@@ -292,55 +399,6 @@ async function takeScreenshot() {
     }
 }
 
-async function takeHistoryScreenshot() {
-    const historyList = document.getElementById('historyList');
-    try {
-        // Create a temporary container for the screenshot
-        const tempContainer = document.createElement('div');
-        tempContainer.style.background = '#374151';
-        tempContainer.style.padding = '20px';
-        tempContainer.style.borderRadius = '8px';
-        tempContainer.style.maxWidth = '600px';
-        tempContainer.style.margin = '0 auto';
-        
-        // Add history items
-        const historyContent = searchHistory.map(item => `
-            <div style="background: #4B5563; padding: 12px; margin: 8px 0; border-radius: 8px;">
-                <div style="color: white; margin-bottom: 4px;">شماره صندلی: ${item.seatNumber}</div>
-                <div style="color: #D1D5DB; font-size: 14px;">کلاس: ${item.className} - طبقه: ${item.floor}</div>
-            </div>
-        `).join('');
-        
-        tempContainer.innerHTML = `
-            <h2 style="color: white; font-size: 20px; margin-bottom: 16px; text-align: center;">جام‌کو: جست و جوی کلاس و طبقه</h2>
-            ${historyContent}
-            <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #4B5563; text-align: left; color: #9CA3AF; font-size: 12px;">
-                JamCoo? - by Ham3ds
-            </div>
-        `;
-
-        document.body.appendChild(tempContainer);
-        
-        const canvas = await html2canvas(tempContainer, {
-            backgroundColor: '#374151',
-            scale: 2,
-            logging: false
-        });
-        
-        document.body.removeChild(tempContainer);
-
-        // Create download link
-        const link = document.createElement('a');
-        link.download = 'jamcoo-history.png';
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-
-    } catch (err) {
-        console.error('Failed to take history screenshot:', err);
-        alert('خطا در تهیه اسکرین‌شات تاریخچه');
-    }
-}
-
 function toggleAccordion() {
     const content = document.querySelector('.accordion-content');
     const icon = document.querySelector('.accordion-icon > i');
@@ -357,14 +415,22 @@ function toggleAccordion() {
 }
 
 function handleRecordToggle() {
-    const isChecked = document.getElementById('recordToggle').checked;
-    const historySection = document.getElementById('historySection');
-    if (!isChecked) {
-        historySection.style.display = 'none';
-    } else if (searchHistory.length > 0) {
-        historySection.style.display = 'block';
-    }
+    historyManager.updateDisplay();
 }
 
 // Initialize history display on page load
-document.addEventListener('DOMContentLoaded', updateHistoryDisplay);
+document.addEventListener('DOMContentLoaded', () => {
+    const existingHistory = JSON.parse(localStorage.getItem('searchHistory') || '[]');
+    if (existingHistory.length > 0) {
+        const recordToggle = document.getElementById('recordToggle');
+        recordToggle.checked = true;
+        document.getElementById('historySection').style.display = 'block';
+    }
+    
+    historyManager.updateDisplay();
+    
+    const clearHistoryBtn = document.querySelector('[onclick="clearHistory()"]');
+    if (clearHistoryBtn) {
+        clearHistoryBtn.onclick = () => historyManager.clear();
+    }
+});
