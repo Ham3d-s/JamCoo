@@ -87,6 +87,30 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- History Section -->
+                        <div id="historySection" class="mt-8 pt-8 border-t border-gray-700 hidden">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-lg font-semibold text-white">تاریخچه جستجو</h2>
+                                <button onclick="clearHistory()" class="text-sm text-red-400 hover:text-red-300">پاک کردن تاریخچه</button>
+                            </div>
+                            <div id="historyList" class="space-y-3">
+                                <!-- History items will be inserted here -->
+                            </div>
+                            <div id="historyActions" class="mt-4 grid grid-cols-3 gap-2" style="display: none;">
+                                <button onclick="historyManager.copy()" class="btn-indigo">
+                                    کپی تاریخچه
+                                </button>
+                                <button onclick="historyManager.download()" class="btn-green">
+                                    دانلود تاریخچه
+                                </button>
+                                <button onclick="historyManager.takeScreenshot()" class="btn-blue">
+                                    اسکرین‌شات
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- User Guide Section (Moved below history) -->
                         <div class="mt-6">
                             <button type="button" onclick="toggleAccordion()"
                                 class="flex w-full justify-between rounded-lg bg-gray-700 px-4 py-3 text-right text-sm font-medium text-white hover:bg-gray-600 transition-colors">
@@ -105,25 +129,7 @@
                             </div>
                         </div>
 
-                        <!-- History Section -->
-                        <div id="historySection" class="mt-8 pt-8 border-t border-gray-700 hidden">
-                            <div class="flex justify-between items-center mb-4">
-                                <h2 class="text-lg font-semibold text-white">تاریخچه جستجو</h2>
-                                <button onclick="clearHistory()" class="text-sm text-red-400 hover:text-red-300">پاک کردن تاریخچه</button>
-                            </div>
-                            <div id="historyList" class="space-y-3">
-                                <!-- History items will be inserted here -->
-                            </div>
-                            <div id="historyActions" class="mt-4 grid grid-cols-2 gap-2" style="display: none;">
-                                <button onclick="copyHistory()" class="inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
-                                    کپی تاریخچه
-                                </button>
-                                <button onclick="downloadHistory()" class="inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
-                                    دانلود تاریخچه
-                                </button>
-                            </div>
-                        </div>
-
+                        <!-- Version Info Update -->
                         <div class="mt-8 pt-8 border-t border-gray-700">
                             <div class="text-center space-y-6">
                                 <div class="flex justify-center items-center space-x-6 space-x-reverse">
@@ -139,19 +145,25 @@
                                         Created by Ham3ds
                                     </div>
                                     <div class="relative inline-block group mt-1">
-                                        <span class="text-xs text-gray-500 cursor-help">v140371.1</span>
+                                        <span class="text-xs text-gray-500 cursor-help">v1403129.1</span>
                                         <div class="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 px-4 py-3 bg-gray-900 dark:bg-gray-700 text-white text-sm rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                                             <div class="border-b border-gray-700 dark:border-gray-600 pb-2 mb-2">
-                                                <strong>ورژن:</strong> 140371.1
+                                                <strong>ورژن:</strong> 1403129.1
                                             </div>
-                                            <p class="mb-2">این ورژن برای ترم مهرماه ۱۴۰۳ طراحی شده است.</p>
+                                            <p class="mb-2">این ورژن برای ترم مهرماه ۱۴۰۳ طراحی شده بود.</p>
                                             <ul class="text-xs space-y-1 text-gray-300">
                                                 <li>• جستجوی سریع کلاس‌ها</li>
                                                 <li>• نمایش طبقه و محدوده شماره صندلی‌ها</li>
-                                                <li>• رابط کاربری ساده و کاربرپسند</li>
                                                 <li>• قابلیت ذخیره و مدیریت تاریخچه جستجوها</li>
                                                 <li>• امکان کپی و دانلود تاریخچه جستجوها</li>
                                                 <li>• بهبود نمایش راهنما و اطلاعات</li>
+                                                <li>• بهبود رابط کاربری و انیمیشن‌ها</li>
+                                                <li>• افزودن نوتیفیکیشن‌های بصری</li>
+                                                <li>• بهبود مدیریت تاریخچه جستجوها</li>
+                                                <li>• بهینه‌سازی عملکرد و کد</li>
+                                                <li>• اصلاح چینش بخش‌های مختلف</li>
+                                                <li>• بهبود پیام‌های خطا و راهنمایی</li>
+
                                             </ul>
                                             <div class="absolute bottom-[-8px] left-1/2 transform -translate-x-1/2 w-3 h-3 bg-gray-900 dark:bg-gray-700 rotate-45"></div>
                                         </div>
